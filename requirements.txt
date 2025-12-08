@@ -1,6 +1,9 @@
-opencv-python-headless
+streamlit
 ultralytics
 easyocr
+opencv-python-headless
 numpy
-pillow
-streamlit
+pandas
+Pillow
+torch
+torchvision
