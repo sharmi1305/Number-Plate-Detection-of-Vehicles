@@ -1,9 +1,8 @@
 streamlit
 ultralytics
-easyocr
 opencv-python-headless
+pillow
+easyocr
 numpy
-pandas
-Pillow
 torch
 torchvision
