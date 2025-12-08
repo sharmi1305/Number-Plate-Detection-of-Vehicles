@@ -84,10 +84,12 @@ def detect_plates(image_bgr: np.ndarray, conf_thr: float, min_w: int, min_h: int
 
     rows = []
     for (x1, y1, x2, y2), c in zip(boxes, confs):
-        x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
-        w, h = x2 - x1, y2 - y1
-        if w < min_w or h < min_h:
-            continue
+       classes = results[0].boxes.cls.cpu().numpy()
+
+for (x1, y1, x2, y2), c, cls in zip(boxes, confs, classes):
+    if int(cls) != 0:   # assuming class 0 is number_plate
+        continue
+
 
         crop = image_bgr[y1:y2, x1:x2]
         enhanced = preprocess_plate(crop)
@@ -112,9 +114,9 @@ if "run_webcam" not in st.session_state:
 
 st.sidebar.header("Controls")
 mode = st.sidebar.radio("Mode", ["Upload Image", "Webcam (real-time)"])
-conf_thr = st.sidebar.slider("Detection confidence", 0.10, 0.90, 0.30, 0.05)
-min_w = st.sidebar.number_input("Min plate width (px)", 20, 2000, 80, 10)
-min_h = st.sidebar.number_input("Min plate height (px)", 10, 2000, 30, 10)
+conf_thr = st.sidebar.slider("Detection confidence", 0.05, 0.90, 0.20, 0.05)
+min_w = st.sidebar.number_input("Min plate width (px)", 20, 2000, 40, 10)
+min_h = st.sidebar.number_input("Min plate height (px)", 10, 2000, 15, 5)
 
 if mode == "Upload Image":
     uploaded_file = st.file_uploader("Upload Vehicle Image", type=["jpg", "jpeg", "png"])
@@ -213,3 +215,4 @@ else:
             cap.release()
             cv2.destroyAllWindows()
             right.info("Webcam stopped.")
+
