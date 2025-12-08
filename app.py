@@ -74,39 +74,57 @@ def detect_plates(image_bgr: np.ndarray, conf_thr: float, min_w: int, min_h: int
     Run YOLO, return overlay image and a list of results dicts:
     {Plate No., Confidence, x1, y1, x2, y2}
     """
+
     t0 = time.time()
     results = model(image_bgr, conf=conf_thr)
     elapsed = time.time() - t0
 
-    overlay = results[0].plot()  
-    boxes = results[0].boxes.xyxy.cpu().numpy() if results[0].boxes is not None else np.empty((0, 4))
-    confs = results[0].boxes.conf.cpu().numpy() if results[0].boxes is not None else np.array([])
+    overlay = results[0].plot()
+
+    if results[0].boxes is None:
+        return overlay, [], elapsed, np.array([])
+
+    boxes = results[0].boxes.xyxy.cpu().numpy()
+    confs = results[0].boxes.conf.cpu().numpy()
+    classes = results[0].boxes.cls.cpu().numpy()
 
     rows = []
-    for (x1, y1, x2, y2), c in zip(boxes, confs):
-       classes = results[0].boxes.cls.cpu().numpy()
 
-for (x1, y1, x2, y2), c, cls in zip(boxes, confs, classes):
-    if int(cls) != 0:   # assuming class 0 is number_plate
-        continue
+    for (x1, y1, x2, y2), c, cls in zip(boxes, confs, classes):
 
+        # ✅ Only allow number plate class (usually class 0)
+        if int(cls) != 0:
+            continue
+
+        x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
+        w, h = x2 - x1, y2 - y1
+
+        # ✅ Size filtering
+        if w < min_w or h < min_h:
+            continue
 
         crop = image_bgr[y1:y2, x1:x2]
         enhanced = preprocess_plate(crop)
         raw = easy_ocr_text(enhanced)
         text = clean_plate_text(raw)
 
-        draw_label(overlay, f"{text} ({c:.2f})" if text else f"{c:.2f}", x1, y1)
+        draw_label(
+            overlay,
+            f"{text} ({c:.2f})" if text else f"{c:.2f}",
+            x1, y1
+        )
 
         rows.append({
             "Plate No.": text if text else raw if raw else "",
             "Confidence": round(float(c), 2),
-            "x1": x1, "y1": y1, "x2": x2, "y2": y2,
+            "x1": x1,
+            "y1": y1,
+            "x2": x2,
+            "y2": y2,
             "Processing Time (s)": round(elapsed, 3)
         })
 
     return overlay, rows, elapsed, confs
-
 if "webcam_logs" not in st.session_state:
     st.session_state.webcam_logs = []
 if "run_webcam" not in st.session_state:
@@ -215,4 +233,5 @@ else:
             cap.release()
             cv2.destroyAllWindows()
             right.info("Webcam stopped.")
+
 
