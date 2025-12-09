@@ -8,15 +8,6 @@ import streamlit as st
 from ultralytics import YOLO
 from PIL import Image, ImageOps
 import easyocr
-if mode == "Upload Image":
-    uploaded_file = st.file_uploader("Upload Vehicle Image", type=["jpg", "jpeg", "png"])
-    if uploaded_file:
-        img = Image.open(uploaded_file).convert("RGB")
-
-        # ✅ AUTO FIX ROTATION HERE ALSO
-        img = ImageOps.exif_transpose(img)
-
-        img_np = np.array(img)[:, :, ::-1]
 
 st.set_page_config(page_title="Number Plate Detection of Vehicles", page_icon="🚘", layout="wide")
 st.title("🚘 Number Plate Detection of Vehicles (YOLO + EasyOCR)")
@@ -242,6 +233,7 @@ else:
             cap.release()
             cv2.destroyAllWindows()
             right.info("Webcam stopped.")
+
 
 
 
